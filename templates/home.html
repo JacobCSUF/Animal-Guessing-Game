@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Animal Guessing Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f4f0;
+      color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    header {
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    header span { color: #2d6a4f; }
+
+    /* ── CARD ── */
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: #fff;
+      border: 1px solid #e0ddd6;
+      border-radius: 14px;
+      padding: 2rem;
+    }
+
+    .q-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 0.75rem;
+    }
+
+    .q-text {
+      font-size: 1.35rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 1.75rem;
+      min-height: 3.5rem;
+    }
+    .q-text.result {
+      color: #2d6a4f;
+      font-size: 1.2rem;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    /* "Yes" spans full width but no longer hardcoded green */
+    .btn-grid button[value="y"] {
+      grid-column: span 2;
+    }
+
+    .btn-grid button {
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1.5px solid #e0ddd6;
+      background: #fafaf8;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .btn-grid button:hover:not(:disabled) {
+      background: #2d6a4f;
+      border-color: #2d6a4f;
+      color: #fff;
+    }
+    .btn-grid button[value="n"]:hover:not(:disabled) {
+      background: #c0392b;
+      border-color: #c0392b;
+      color: #fff;
+    }
+    .btn-grid.locked button {
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .loading-text {
+      font-size: 0.82rem;
+      color: #999;
+      margin-top: 0.75rem;
+      display: none;
+    }
+    .loading-text.visible { display: block; }
+
+    /* Play Again */
+    .play-again {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.65rem 1.5rem;
+      background: #2d6a4f;
+      color: #fff;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: background 0.12s;
+    }
+    .play-again:hover { background: #245c42; }
+
+    /* ── TOP ANIMALS TOGGLE ── */
+    .toggle-row {
+      width: 100%;
+      max-width: 520px;
+      margin-top: 1rem;
+    }
+    .toggle-btn {
+      background: none;
+      border: 1.5px solid #e0ddd6;
+      border-radius: 8px;
+      padding: 0.45rem 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    .toggle-btn:hover { border-color: #2d6a4f; color: #2d6a4f; }
+    .toggle-btn.open { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+
+    /* ── ANIMALS PANEL ── */
+    .animals-panel {
+      display: none;
+      width: 100%;
+      max-width: 520px;
+      margin-top: 0.5rem;
+      background: #fff;
+      border: 1px solid #e0ddd6;
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+    }
+    .animals-panel.open { display: block; }
+
+    .animals-panel h2 {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #999;
+      margin-bottom: 1rem;
+    }
+
+    .animal-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.55rem;
+      font-size: 0.82rem;
+    }
+    .animal-rank {
+      width: 1.2rem;
+      color: #bbb;
+      font-size: 0.7rem;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .animal-name {
+      width: 130px;
+      flex-shrink: 0;
+      text-transform: capitalize;
+      font-weight: 500;
+    }
+    .animal-row:first-of-type .animal-name { color: #2d6a4f; }
+    .bar-bg {
+      flex: 1;
+      height: 5px;
+      background: #f0ede6;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .bar-fg {
+      height: 100%;
+      background: #2d6a4f;
+      border-radius: 3px;
+      transition: width 0.35s ease;
+    }
+    .animal-pct {
+      width: 3.2rem;
+      text-align: right;
+      color: #999;
+      font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.5rem">🧠</span>
+  <h1>Animal <span>Guessing Game</span></h1>
+</header>
+
+<div class="card">
+  <div class="q-label">
+    {% if posts and (posts.startswith('I think') or posts.startswith('I have')) %}Result{% else %}Question{% endif %}
+  </div>
+
+  <div class="q-text {% if posts and (posts.startswith('I think') or posts.startswith('I have')) %}result{% endif %}">
+    {{ posts }}
+  </div>
+
+  {% if posts and not (posts.startswith('I think') or posts.startswith('I have')) %}
+  <form method="POST" action="/answer" id="answer-form">
+    <div class="btn-grid" id="btn-grid">
+      <button type="submit" name="answer" value="y">Yes</button>
+      <button type="submit" name="answer" value="p">Probably</button>
+      <button type="submit" name="answer" value="idk">Not Sure</button>
+      <button type="submit" name="answer" value="pn">Probably Not</button>
+      <button type="submit" name="answer" value="n">No</button>
+    </div>
+    <div class="loading-text" id="loading-text">Thinking…</div>
+  </form>
+  {% else %}
+  <a href="/" class="play-again">↺ Play Again</a>
+  {% endif %}
+</div>
+
+<div class="toggle-row">
+  <button class="toggle-btn" id="toggle-btn" onclick="toggleAnimals()">Show top animals</button>
+</div>
+
+<div class="animals-panel" id="animals-panel">
+  <h2>Top 10 Most Likely</h2>
+  <div id="animal-list"><p style="color:#bbb;font-size:0.8rem">Loading…</p></div>
+</div>
+
+<script>
+  // ── Lock buttons on submit ──────────────────────────────────────
+  const form = document.getElementById('answer-form');
+  if (form) {
+    form.addEventListener('submit', () => {
+      document.getElementById('btn-grid').classList.add('locked');
+      document.getElementById('loading-text').classList.add('visible');
+    });
+  }
+
+  // ── Persist panel open/closed state across page reloads ─────────
+  const STORAGE_KEY = 'animalPanelOpen';
+  let panelOpen = localStorage.getItem(STORAGE_KEY) === 'true';
+  let pollTimer = null;
+
+  function applyPanelState() {
+    const panel = document.getElementById('animals-panel');
+    const btn   = document.getElementById('toggle-btn');
+    panel.classList.toggle('open', panelOpen);
+    btn.classList.toggle('open', panelOpen);
+    btn.textContent = panelOpen ? 'Hide top animals' : 'Show top animals';
+
+    if (panelOpen) {
+      loadAnimals();
+      clearInterval(pollTimer);
+      pollTimer = setInterval(loadAnimals, 1500);
+    } else {
+      clearInterval(pollTimer);
+    }
+  }
+
+  function toggleAnimals() {
+    panelOpen = !panelOpen;
+    localStorage.setItem(STORAGE_KEY, panelOpen);
+    applyPanelState();
+  }
+
+  // ── Fetch and render top animals ────────────────────────────────
+  async function loadAnimals() {
+    try {
+      const res  = await fetch('/top-animals');
+      if (!res.ok) return;
+      const data = await res.json();
+      // Support both { animals: [...] } and a bare array
+      const list = Array.isArray(data) ? data : data.animals;
+      if (list && list.length) renderAnimals(list.slice(0, 10));
+    } catch (e) {
+      // Silently ignore network errors during polling
+    }
+  }
+
+  function renderAnimals(animals) {
+    const top = animals[0].probability;
+    document.getElementById('animal-list').innerHTML = animals.map((a, i) => {
+      const pct  = (a.probability * 100).toFixed(1);
+      const barW = top > 0 ? Math.round((a.probability / top) * 100) : 0;
+      return `
+        <div class="animal-row">
+          <span class="animal-rank">${i + 1}</span>
+          <span class="animal-name">${a.animal}</span>
+          <div class="bar-bg"><div class="bar-fg" style="width:${barW}%"></div></div>
+     
+        </div>`;
+    }).join('');
+  }
+
+  // Restore panel state on every page load
+  applyPanelState();
+</script>
+
+</body>
+</html>
